@@ -2,8 +2,10 @@ const express = require('express');
 const webpack = require('webpack');
 const { config } = require('../config');
 const main = require('./routes/main');
+const helmet = require('helmet');
 
 const app = express();
+app.use(express.static(`${__dirname}../public`));
 
 if (config.dev) {
   console.log('Cargando la configuración de desarrollo');
@@ -22,6 +24,11 @@ if (config.dev) {
 
   app.use(webpackDevMiddleware(compiler, serverConfig));
   app.use(webpackHotMiddleware(compiler));
+
+} else {
+  app.use(helmet());
+  app.use(helmet.permittedCrossDomainPolicies());
+  app.disable('x-powered-by');
 }
 
 app.get('*', main);

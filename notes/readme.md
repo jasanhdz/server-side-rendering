@@ -313,6 +313,540 @@ Lo que debemos hacer en esté caso es crear nuestro html dentro de un template S
 
 Con estó ya estaríamos sirviendo nuestra aplicación desde el servidor.
 
+## Agregando las variables de sass desde webpack
+
+Ya que tenemos nuestra apliación de React servida desde express podemos empezar a hacer ciertas mejoras a la configuración de sass, para poder servir archivo de variables, base o cualquier cosa que necesitemos desde sass que solo vamos a importar una sola vez desde ahí para no estarnos preocupando en dado caso de que falte.
+
+Lo primero que tenemos que hacer es ir a nuestra configuración de webpack y vamos a modificar nuestra configuración de sass, acá ya podemos remover nuestro _html-loader_. Vamos a tomar nuestro sass-loader que nos va ha permitir configurar todo estó, vamos a abrir unas llaves acá y vamos indicarle por separado que vamos a mandarle el loader, usualmente los loader reciben ciertas opciones como lo puedes verificar en la documentación de cada loader, pero en esté caso sass-loader recibe un elemento options.
+
+Esté elemento options nos va ha permitir en esté caso cargar con data cualquier dato que necesitemos agregar cuando lo necesitemos, acá vamos apoder agregar las variables que ya definimos usando un template-string.
+
+```js
+{
+        test: /\.(s*)css$/,
+        use: [
+          {
+            loader: MiniCssExtractPlugin.loader,
+          },
+          'css-loader',
+          'postcss-loader',
+          {
+            loader: 'sass-loader',
+            options: {
+              data: `
+                @import  "${path.resolve(__dirname, './src/frontend/assets/styles/Vars.scss')}";
+                @import  "${path.resolve(__dirname, './src/frontend/assets/styles/Media.scss')}";
+              `,
+            },
+          },
+        ],
+      },
+```
+
+Para terminar está configuración debemos remover el import de los assets que estamos agregando acá.
+
+## Aplicando history y creando rutas para el servidor
+
+Ya que aprendiste a configurar variables por defecto del lado de webpack ahora vamos al cliente y vamos a hacer ciertos cambios para que primero nuestro navegador tenga historia y luego vamos aplicar ciertas mejoras y crear un archivo de ``serverRoutes.js`` para poder preparar todo nuestro entorno para el **server side rendering** 
+
+Primero debemos intalar una dependencia que se llama **history** y está dependencia nos va ha añadir ciertas funcionalidades a **react-router** para que tenga una historia para que cuando vallamos de un lado a otro se conserve en el navegador, luego de estó vamos a las rutas, acá nos damos cuenta que tenemos unas rutas definidas, antes tenemos que ir a nuestro archivo index y crear nuestra historia como tál.
+
+1. Vamos a importat Router el cuál vamos a importar de ``react-router``.
+2. vamos a importar exactamente lo que necesitamos que es la historia del navegador, en esté caso vamos a importar el ``createBroserHistroy`` de ``history``
+3. Ahora vamos a crear nuestra historía, creamos una variable y llamamos a la función ``createBroserHistroy`` y ya con esto tendríamos una historia.
+4. Para indicarle a react-router que hay una historia, llamamos a ``Router`` y hacemos un wrapper de nuestros componentes y luego le vamos a decir que tenga un history.
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import { createStore, compose } from 'redux';
+import { Router } from 'react-router';
+import { createBrowserHistory } from 'history';
+import reducer from './reducers';
+import App from './routes/App';
+import initialState from './initialState';
+
+  const store = createStore(reducer, initialState);
+  const history = createBrowserHistory();
+
+  ReactDOM.render(
+    <Provider store={store}>
+      <Router history={history}>
+        <App />
+      </Router>
+    </Provider>,
+    document.getElementById('app'),
+  );
+};
+```
+
+Ya con el history creado necesitamos también preparar las rutas para el servidor. Primero tenemos que crear las rutas exactamente iguales como las tenemos en el navegador.
+
+¿Por qué tenemos que prepararlas para el servidor?
+
+Como podemos ver en nuestras Routes tenemos un browserHistory, esté browser history no existe en el servidor y cuando el servidor intente acceder a estó nos va ha decir que no existe como tál un navegador.
+
+Vamos a crear un archivo ``serverRoutes.js``, esté objeto va ha tener la misma cantidad de rutas que tenemos definidas.
+
+```js
+import Home from '../containers/Home';
+import Login from '../containers/Login';
+import Register from '../containers/Register';
+import NotFound from '../containers/NotFound';
+
+const serverRoutes = [
+  {
+    path: '/',
+    component: Home,
+    exact: true,
+  },
+  {
+    path: '/login',
+    component: Login,
+    exact: true,
+  },
+  {
+    path: '/register',
+    component: Register,
+    exact: true,
+  },
+  {
+    name: 'NotFound',
+    component: NotFound,
+  },
+];
+
+export default serverRoutes;
+```
+
+## Haciendo initialState accesible 
+
+Ya que aprendiste a configurar el history en el navegador y también a configurar las rutas para que sean servidas del lado del servidor, ahora vamos a hacer un poco más reusable el _initialState_.
+
+Como puedes ver el initialState no es para nada reusable porque nos esta presentando ciertos problemas, cuando vayamos a servir nuestra aplicación del servidor tenemos que crear otro objeto exactamente igual, lo que tendremos que hacer es exportarlo, es decir crear un archivo y exportarlo ahí.
+
+El objeto que vamos a crear debe ser exactamente igual al initialState que vamos a exportar.
+
+```js
+module.exports = {
+  // objeto initialState
+}
+```
+
+Ahora lo que vamos a hacer es importarlo al lugar donde lo vamos a ocupar y de esté modo ya tenmos un código más reuzable.
+
+## Configurando Redux dev Tools
+
+Redux dev Tools es una extensión de chrome el cual nos ayuda a manejar nuestros estados, para poder saber como se esta comportando exactamente nuestra aplicación en tiempo real, porque hasta ahora estamos manejando redux internamente pero no sabes que está pasando en nuestra aplicación, no sabes si se ejecuta una función o un acction. Para instalarla debemos ir a nuestro navegador y en extensiones instalarla.
+
+Para integrarlo con nuestro código es muy sencillo, llamamos al método compose en ``redux`` el cual funciona como un middleware, todo lo que ejecutemos lo va ha ejecutar dentro de ahí para pasarselo a redux.
+
+vamos a agregar está opción a nuestro store.
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import { createStore, compose } from 'redux';
+import { Router } from 'react-router';
+import { createBrowserHistory } from 'history';
+import reducer from './reducers';
+import App from './routes/App';
+import initialState from './initialState';
+
+const composeEnhancer = window.__REDUX__DEVTOOLS_EXTENSION_COMPOSE_ || compose;
+const store = createStore(reducer, initialState, composeEnhancer());
+const history = createBrowserHistory();
+
+ReactDOM.render(
+    <Provider store={store}>
+      <Router history={history}>
+        <App />
+      </Router>
+    </Provider>,
+    document.getElementById('app'),
+  );
+```
+
+Gracias a esto podemos ver todo el flujo de nuestra aplicación con esta extensión.
+
+## Definiendo la función main para renderizado desde el servidor
+
+A lo largo de esté documento hemos visto diferentes estrategias y diferentes procesos para poder hacer el server side rendering pero hasta ahora no lo hemos aplicado, hemos modificado las rutas, hemos abstraido el initialState, hemos configurado redux dev tools, hemos echo algunas modificaciones con nuestro servidor de express, pero a continuación vamos a ver como se hace el propiamente el server side rendering.
+
+Para poder configurar nuestro servidor para que renderice nuestra aplicación de React, primero debemos hacer ciertas modificaciones, una de las modificaciones que tenemos que hacer es que la función que de nuestra app, la que tiene ``(req, res, next)`` no esta bien tenerlo por acá porque aqui vamos aplicar la logica de la respuesta a aplicación.
+
+Para poder tener una configuración más eficiente debemos configurar una nueva carpeta que se va ha llamar routes, la cuál vamos a definir primero, aquí vamos  crear una ruta que se va ha llamar ``main``  
 
 
+Esté archivo **main.js** va a tener toda la lógica que estamos renderizando en nuestro servidor, es decir toda la lógica que tenemos en esa ruta la vamos a pasar a nuestro archivo main, pero primero tenemos que hacer ciertas cosas.
+
+Para empezar el proceso de renderizado desde el servidor, primero tenemos que importar React, porque vamos a llamar a nuestros componentes tál cual como si estuviesemos llamando a nuestra aplicación en el archivo index con ciertas modificaciones vamos a llamar estó acá. Porque tenemos una dependencia que se llama ``react-dom`` y react-dom nos proporciona un método que se llama ``renderToString``, el **renderToString** lo que permite es precisamente renderizar el componente o una apliación de React a un String.
+
+También tenemos que importar el **createStore**, acá no necesitamos configurar redux-dev-tools desde el lado del servidor y aparte de estó necesitamos crear o instanciar en esté caso un elemento que se llama **StaticRouter**, el react-router no tiene como tál una ruta en el servidor.
+
+**StaticRouter**: crea una ruta estatica o una ruta que no cambié para que el servidor no tenga ningún problema al momento de crear las rutas a las que vamos a estar enviando nuestra aplicación. esté método lo proporciona **react-router**.
+
+Otro paquete que es necesario instalar es ``react-router-config``. **react-router-config**: lo que nos permite es tener un método, vamos a acceder a un método que se llama **render-routes** y ahí vamos a poder renderizar las rutas del **staticRouter** que ya estamos definiendo.
+
+```js
+import React from 'react';
+import { renderToString } from 'react-dom';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import { staticRouter } from 'react-router';
+import { renderRoutes } from 'react-router-config';
+```
+
+Luego de estó debemos que importar nuestra rutas, pero nuestro archivo de rutas que debemos importar en esté caso son las rutas del servidor.
+
+```js
+import Routes  from '../../frontend/routes/serverRoutes';
+```
+
+Luego de estó tenemos que importar un archivo que es necesario, porque sucede que nuestra app en esté caso que son las rutas que ya tenemos definidas. Se está definiendo un Layout para que nuestras rutas tengan una especie de Wrapper encerrando todo lo que tenga que ver la lógica de Switch pero en el Servidor, las rutas del servidor no tenemos estó, para ello tenemos que proceder ha importar esté Layout para poder hacer el Wrapper manual y no tener ningún problema luego de que hallá algún problema o diferencias entre el server y el cliente.
+
+```js
+import Layout from '../../frontend/components/Layout';
+// también vamos a llamar a los archivos para contruir nuestro Store
+import reducer from '../../frontend/reducers';
+import initialState from '../../frontend/initialState';
+```
+
+Luego de estó vamos a definir una función la cual nos va ha ayudar a renderizar toda nuestra aplicación, porque ahora tenemos nuestro archivo ``server.js`` renderizando nuestro template, pero esté template no debería de ir acá porque si ponemos toda la lógica acá luego no va ha poder ser reutilizable, supongamos que tenemos 2 bundles, si tenemos que definir estó para el Home y luego queremos llamar otra aplicación desde otra ruta, tendremos que redefinir todo el proceso y llamar 2 veces y estó no es eficiente.
+
+Lo que podemos hacer esn esté caso es que podemos crear un helper es esté helper será un método render, el cual vamos a llevar a una nueva carpeta por cuestiones de organización. Nuestro archivo render en pocas palabras va ha ser esté archivo que tenemos en el server, que luego vamos a llamar desde nuestra ruta principal.
+
+```js
+const render = (html) => {
+  return (`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Platzi Video</title>
+      <link rel="stylesheet" href="assets/app.css" type="text/css">
+    </head>
+    <body>
+      <div id="app"></div>
+      <script src="assets/app.js" type="text/javascript"></script>
+      <script src="assets/vendor.js" type="text/javascript"></script>
+    </body>
+  </html>
+  `);
+};
+
+module.exports = render;
+```
+
+Ya que tenemos nuestra función render vamos a seguir con nuestro archivo de Ruta, y vamos a empezar a usar, esté modulo que acabamos de crear de nuestro templateString.
+
+```js
+import render from '../render';
+```
+
+```js
+const main = (req, res, next) => {
+  try {
+    const store = createStore(reducer, initialState);
+  } catch(err) {
+    next(err);
+  }
+} 
+
+export default main;
+```
+
+## Aplicando la función main para renderizado desde el servidor y creación del string de HTML
+
+En la clase anterior definimos la función main y la función render, para poder preparar nuestro servidor para el renderizado. En está clase vas ha aprender como aplicar los conceptos y las funciones que ya previamente definimos he integramos en nuestra aplicación para renderizarla en el lado del servidor, ahora vamos a definir una constante que se va ha llamar ``html`` que precisamente está constante es la que vamos a enviar a nuestra función ``render``. Acá vamos a pasar la estructura correcta para que nuestro componente sea renderizado.
+
+
+```jsx
+const main = (req, res, next) => {
+  try {
+    const store = createStore(reducer, initialState);
+    const html = renderToString(
+      <Provider>
+        <StaticRouter
+          location={req.url}
+          context={{}}
+        >
+          <Layout>
+            {renderRoutes(Routes)}
+          </Layout>
+        </StaticRouter>
+      </Provider>
+    );
+
+    res.send(render(html));
+
+  } catch(err) {
+    next(err);
+  }
+}
+```
+
+Luego vamos a nuestro archivo ``server.js`` y acá es donde nosotros vamos a llamar a nuestra main, que es esté archivo que acabamos de crear.
+
+```js
+const express = require('express');
+const webpack = require('webpack');
+const { config } = require('../config');
+const main = require('./routes/main');
+
+const app = express();
+
+if (config.dev) {
+  console.log('Cargando la configuración de desarrollo');
+  const webpackConfig = require('../../webpack.config');
+  const webpackDevMiddleware = require('webpack-dev-middleware');
+  const webpackHotMiddleware = require('webpack-hot-middleware');
+  const compiler = webpack(webpackConfig);
+  const serverConfig = {
+    contentBase: `http://localhost${config.dev}`,
+    port: config.port,
+    publicPath: webpackConfig.output.publicPath,
+    hot: true,
+    historyApiFallback: true,
+    stats: { colors: true },
+  };
+
+  app.use(webpackDevMiddleware(compiler, serverConfig));
+  app.use(webpackHotMiddleware(compiler));
+}
+
+// ACÁ LLAMAMOS A MAIN
+app.get('*', main);
+
+app.listen(config.port, (err) => {
+  if (err) console.log(err);
+  console.log(`El servidor está corriendo en htpp://localhost:${config.port}`);
+});
+```
+
+Si levantamos nuestro servidor en esté momento nos marcará un error con nuestras hojas de estilo. Lo que sucede es que del lado del servidor no podemos llamar hojas de estilo, porque no podemos aplicar estilos a un servidor como tál, lo que tenemos que hacer es instalar una dependencia, que se llamá ``ignore-styles``, y precisamente nos ayuda a ignorar estos estilos con un hook del lado del servidor.
+
+Ahora solo tenemos que llamarla desde nuestro index con un require, acá babel se encarga de crear estas configuraciones antes de llamar a nuestro ``server.js``
+
+```js
+require('ignore-styles');
+
+require('@babel/register')({
+  ignore: [/(node_modules)/],
+  presets: ['@babel/preset-env', '@babel/preset-react'],
+});
+
+require('./server.js');
+```
+
+Una vez hecho estó podremos ver que ya nuestra aplicación se está ajecutando, pero aquí hay un detalle, y es que nuestra aplicación si desabilitamos JS, nod daremos cuenta que sigue faltando ``server-side-rendering``. Estó sucede porque no estamos enviando el html, que definimos en main con las configuraciones necesarias, acá lo único que tenemos que hacer es enviar el html que recibimos por parametro a nuestro templateString
+
+```js
+const render = (html) => {
+  return (`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Platzi Video</title>
+      <link rel="stylesheet" href="assets/app.css" type="text/css">
+    </head>
+    <body>
+      <div id="app">${html}</div>
+      <script src="assets/app.js" type="text/javascript"></script>
+      <script src="assets/vendor.js" type="text/javascript"></script>
+    </body>
+  </html>
+  `);
+};
+
+module.exports = render;
+```
+
+Ahora si recargamos nuestro servidor y desabilitamos JS podemos podemos ver que nuestra aplicación sigue funcionando y estó nos indica que ya estamos haciendo un renderizado desde el servidor.
+
+Por ahora no tenemos imagenes, el cual resolveremos más adelante con un hook, pero tenemos nuestra aplicación indexable para que cualquier motor de búsquedad pueda ayudarnos a resolverla, otra cosa importante es que la apariencia del sitio se siente mucho más rápida al momento de la carga.
+
+## Assets require hook
+
+Como pudimos ver nuestra aplicación ya se está renderizando desde el servidor pero seguimos teniendo ciertpos problemas como por ejemplo las imagenes, cuando hacemos JS con el JS desabilitado podemos ver que no tenemos imagenes en las rutas que necesitamos, vamos a solucionarlo acá.
+
+Lo primero que tenemos que hacer es instalar un paquete que se llamá **asset-require-hook** estó lo que nos permite en pocas palabras es indicarle donde están los assets de nuestra aplicación.
+
+Una vez instalada la dependencia tenemos hacer la configuración dentro de nuestro index principal.
+
+```js
+require('asset-require-hook')({
+  extensions: ['jpg', 'png', 'gif'],
+  name: '/assets/[hash].[ext]',
+});
+```
+
+Ya con está configuración podemos ver que ya estamos cargando nuestros assets desde el servidor.
+
+
+## Hydrate
+
+Ya que tenemos nuestra aplicación renderizada desde el servidor con imagenes preparadas y todos los assets requeridos, necesitamos optimizar la carga del sitio.
+
+¿Como vamos a optimizar la carga del sitio?
+
+Lo haremos implementando un método llamado ``hydrate``. Actualmente nuestra aplicación está renderizando un string y ese string luego se monta al cliente cuando carga la librería de react se ejecuta react y hace un render, al llamar el render otra vez es que se esta re-renderizando la aplicación, con **hydrate** resolvemos esté problema, porque lo que hace es un ``bind`` a los eventos y llamá a todos los eventos necesarios que tenemos disponibles en el navegador  para que no tengamos que llamar 2 veces el mismo contenido.
+
+Lo que debemos hacer para poder hidratar nuestra aplicación es que debemos ir a frontend y dentro del archivo ``index.js`` del frontend, y vamos a cambiar el ``ReactDOM.render`` por ``hydrate``, lo que sucede es que nuestra aplicación se vuelve un poco ineficiente con está configuración del ``ss-r`` porque está haciendo un doble render.
+
+```js
+import React from 'react';
+import { hydrate } from 'react-dom';
+  hydrate(
+    <Provider store={store}>
+      <Router history={history}>
+        <App />
+      </Router>
+    </Provider>,
+    document.getElementById('app'),
+  );
+```
+
+Esté simple cambio va ha mejorar un montón el performace de la aplicación y va ha hacerla ejecutable mucho más rápido.
+
+## Estado de Redux desde Express
+
+Otra cosa muy importante es que nuestros estados se están enviando 2 veces, como podemos notar acá en el archivo frontend de index, estamos definiendo un store, con un initalState y luego en el servidor, también estamos haciendo lo mismo, esto es un poco ineficiente porque si llegamos a cambiar una cosa o la otra es que estamos cargando el mismo archivo y la idea es que todo nuestro estado permanezca desde el servidor y sea enviado al cliente.
+
+Lo que debemos hacer en esté caso es ir a la documentación de Redux 
+
+- https://redux.js.org/recipes/server-rendering
+
+Lo que vamos a buscar en esté caso es como vamos a renderizar nuestra aplicación y como vamos a enviar el estado que en esté caso se llamaría ``preloadedState``, esté preloadeState lo vamos a definir en el index de la ruta pricipal que sería la ruta **main** y vamos a llamarlo y definirlo.
+
+El preloadedState va a recibir el estado por medio del store y lo vamos a pasar como segundo párametro a nuestra función. 
+
+```js
+const preloadedState = store.getState();
+res.send(render(html, preloadedState));
+```
+
+Para luego tal cúal como dice la documentación vamos a incertarlo en un script para cargarlo como un ``preloadedState`` para luego ser cargado o reidratado en nuestra aplicación.
+
+```js
+const render = (html, preloadedState) => {
+  return (`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Platzi Video</title>
+      <link rel="stylesheet" href="assets/app.css" type="text/css">
+    </head>
+    <body>
+      <div id="app">${html}</div>
+      <script>
+          // WARNING: See the following for security issues around embedding JSON in HTML:
+          // http://redux.js.org/recipes/ServerRendering.html#security-considerations
+          window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(/</g, '\\u003c')}
+        </script>
+      <script src="assets/app.js" type="text/javascript"></script>
+      <script src="assets/vendor.js" type="text/javascript"></script>
+    </body>
+  </html>
+  `);
+};
+
+module.exports = render;
+```
+
+Ahora vamos a ir a nuestro archivo index del frontend y vamos a eliminar el import del ``initialState`` y vamos a proceder a definir nuestro preloadedState, para ello crearemos una constante **para recibir el state desde el objeto window**
+
+```js
+const preloadedState = window.__PRELOADED_STATE__;
+const store = createStore(reducer, preloadedState, composeEnhacers());
+
+const history = createBrowserHistory();
+
+  hydrate(
+    <Provider store={store}>
+      <Router history={history}>
+        <App />
+      </Router>
+    </Provider>,
+    document.getElementById('app'),
+  );
+```
+
+Ya con estó estaríamos reidratando el estado y no tendríamos necesidad de llamar 2 veces el mismo estado.
+
+Una cosa más que deberíamos agregar en las validaciones y en la configuración de nuestro servidor es precismante como vamos a diferenciar que existe en nuestro servidor o en nuestro cliente. La forma más sencilla de configurar estó es validar el **typeof** de **window** que seá diferente de **undefined**.
+
+Por lo generarl debemos hacer binds a eventos que existen solo en el window, por ejemplo si queremos usar un localStorage, pues no hay esté elemento en el servidor. Esto lo hacemos para que nuestra aplicación no deje de funcionar en dado caso de que no encuentre el objeto dentro de window.
+
+```js
+if (typeof window !== 'undefined') {
+
+  const composeEnhacers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+  const preloadedState = window.__PRELOADED_STATE__;
+  const store = createStore(reducer, preloadedState, composeEnhacers());
+  const history = createBrowserHistory();
+
+  hydrate(
+    <Provider store={store}>
+      <Router history={history}>
+        <App />
+      </Router>
+    </Provider>,
+    document.getElementById('app'),
+  );
+};
+```
+
+Con esto vamos a olvidarnos del problema de cuando estemos reidratando la aplicación algó se dañe y no podamos reidratar correctamente la aplicación.
+
+Hasta esté punto nuestra aplicación ya tiene server side rendering, ya es indexable por motores de busquedad, ya tiene un look an field más rápido y nuestros usuarios estarán más felices de estar en nuestro sitio.
+
+Los siguientes pasos van ha ser aplicar ciertas medidas para que cuando pasemos de un entorno a otro sea desarrollo o producción podamos hacer el cambio sin nigún tipo de problema.
+
+## Configurando nuestro servidor para producción
+
+El siguiente paso es agregarle ciertas configuraciones a nuestro servidor de express para que cuando integremos con producción no tengamos ningún tipo de problema al momento de ejecutar nuestra aplicación.
+
+Para preparar nuestra aplicación para producción primero debemos hacer es revizar ciertas medidas de seguridad que debemos tener, para eso nos vamos a apoyar en ``helmet``, esté es un paquete que nos va ha ayudar con la seguridad tanto básica como avanzada de nuestro sitio, como puedes ver una vez que nosotros integramos helmet tenemos ciertos modulos y ciertas politicas de privacidad que vienen por defecto y otras que debemos activar manualmente.
+
+1. instalamos helmet ``yarn add helmet --exact``.
+2. Una vez instalado helmet debemos hacer ciertas validaciones en nuestro servidor.
+
+En stagin y en producción vamos a cargar la misma configuración porque la idea es que stagin se vea exactamente igual que en producción.
+
+```js
+const helmet = require('helmet');
+if(config.dev) {
+  // cargando webpack
+} else {
+  app.use(helmet());
+  app.use(helmet.permittedCrossDomainPolicies());
+}
+```
+
+Usualmente hay herramientas o extensiones de chrome o de cualquier otro navegador que motor o que servidor se está usando, si se está usando _"express, sinatra, o django"_ y para poder desabilitar estó y que no puedan saber exactamente que estamos usando del lado del servidor, pues sencillamente desabilitamos estó.
+
+```js
+else {
+  app.use(helmet());
+  app.use(helmet.permittedCrossDomainPolicies());
+
+  // desabilitando info del servidor
+    app.disable('x-powered-by');
+}
+```
+
+Otra configuración que también es necesaria hacer al momento de estar en producción es que vamos a necesitar definir la carpeta pública que va ha usar nuestro servidor, porque como no estamos usando ``react-hot-mode-replacement`` cuando estemos en producción, primero vamos a definir una carpeta que va ha ser nuestra carpeta pública y aquí al momento de extraer todos los assets, estós assets van a ser servidos en está carpeta pública y nuestro servidor de express va ha poder usarla.
+
+Lo que debemos hacer es decirle a nuestra aplicación de express que va ha usar estáticos y estos estáticos los vamos a definir con un template string, para definirle la ruta pública.
+
+```js
+const app = express();
+app.use(express.static(`${__dirname}../public`));
+```
+
+De esté modo nuestra aplicación va ha poder encontrar los assets necesarios para que nuestra aplicación sea renderizada de manera adecuada en el servidor de producción.
+
+Ya que hicimos las mejores necesarias para que nuestra aplicación funcione de manera adecuada del lado del servidor, ahora debemos hacerle configuraciones para que funcione webpack también con diferentes entornos de desarrollo.
 
