@@ -872,3 +872,35 @@ Si estamos en producción no vamos a llamar a redux_dev_tools por ende no va ha 
 
 Ahora debemos configurar webpack para que esté este preparado para entornos de producción, esto lo vamos a configurar sencillamente, llendo a nuestro archivo webpack donde vamos a ocupar la variable de entorno para saber si estamos en producción y mediante esta variable crear una validación.
 
+## Compresión de Assets
+
+Ya que tenemos nuestro webpack y nuestro servidor configurado para producción, ahora es momento de agregarle ciertas mejoras a nuestros archivos para que al momento de servirlos en producción pesen mucho menos.
+
+Lo primero que debemos hacer en esté caso es instalar un plugin que se llama ``compression webpack plugin``, con esté plugin vamos a poder establecer ciertas extrategias para que nuestros assets sean comprimidos de manera adecuada y podamos definirle diferentes estrategias.
+
+Manera usual de usar el plugin:
+```js
+const CompressionPlugin = require('compression-webpack-plugin');
+
+module.exports = {
+  plugins: [new CompressionPlugin()],
+};
+```
+
+Pero hay ciertas estrategias, podemos indicarle por ejemplo el tipo de archivos que busque para comprimir, etc.
+
+Para añadirle ciertas mejores podemos pasarle un objeto y podemos decirle exactamente que necesitamos, en esté caso vamos a imprimir todos nuestros assets, para hacer estó sencillamante debemos crear una expresión regular, está expresión regular va ha estar indicandonos que tipos de archivos vamos a estar buscando para comprimir.
+
+```js
+isProd ? new CompressionPlugin({
+      test: /\.(js|jsx|css)$/,
+      filename: '[path].gz',
+    }) : false,
+  ],
+```
+
+Ya que agregamos nuestro plugin debemos hacer una parte muy importante y es configurar nuestro webpack para que pueda servir a producción, para esto vamos a crear un nuevo script para producción:
+
+```json
+
+```

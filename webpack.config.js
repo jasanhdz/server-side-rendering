@@ -2,8 +2,9 @@ const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const autoprefixer = require('autoprefixer');
 const webpack = require('webpack');
-const { config } = require('./src/config');
 const TerserPlugin = require('terser-webpack-plugin');
+const { config } = require('./src/config');
+const CompressionPlugin = require('compression-webpack-plugin');
 
 const isProd = config.dev === 'production';
 
@@ -93,6 +94,9 @@ module.exports = {
   devServer: {
     historyApiFallback: true,
   },
+  node: {
+    fs: 'empty',
+  },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new webpack.LoaderOptionsPlugin({
@@ -105,5 +109,10 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: 'assets/app.css',
     }),
+    isProd ? new CompressionPlugin({
+      test: /\.(js|jsx|css)$/,
+      filename: '[path].gz',
+    }) : false,
   ],
 };
+
