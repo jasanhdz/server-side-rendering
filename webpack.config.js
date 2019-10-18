@@ -2,12 +2,18 @@ const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const autoprefixer = require('autoprefixer');
 const webpack = require('webpack');
+const { config } = require('./src/config');
+const TerserPlugin = require('terser-webpack-plugin');
+
+const isProd = config.dev === 'production';
 
 module.exports = {
+  devtool: isProd ? 'hidden-source-map' : 'cheap-source-map',
   entry: './src/frontend/index.js',
-  mode: 'development',
+  mode: config.dev,
   output: {
-    path: '/',
+    path: isProd ?
+      path.join(process.cwd(), './src/server/public') : '/',
     filename: 'assets/app.js',
     publicPath: '/',
   },
@@ -15,6 +21,7 @@ module.exports = {
     extensions: ['.js', '.jsx'],
   },
   optimization: {
+    minimizer: isProd ? [new TerserPlugin()] : [],
     splitChunks: {
       chunks: 'async',
       name: true,

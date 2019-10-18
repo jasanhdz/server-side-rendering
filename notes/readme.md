@@ -850,3 +850,25 @@ De esté modo nuestra aplicación va ha poder encontrar los assets necesarios pa
 
 Ya que hicimos las mejores necesarias para que nuestra aplicación funcione de manera adecuada del lado del servidor, ahora debemos hacerle configuraciones para que funcione webpack también con diferentes entornos de desarrollo.
 
+## Configurando el frontend y webpack para producción
+
+Ya que tenemos nuestro servidor preparado para producción también tenemos que hacer ciertas configuraciones tanto en webpack como en el cliente para que todo funcione de manera adecuada.
+
+Lo primero que debemos de hacer para preparar nuestro entorno para producción es que no podemos tener herramientas como redux-dev-tools, porque a nosotros no nos gustaría que nuestro usuario esté viendo los cambios que vamos realizando en la aplicación, para hacer estó tenemos que validad en nuestro archivo ``index.js`` que es donde estamos cargando el cliente, que debemos y que no queremos que se cargue al momento de entrar en producción.
+
+Sencillamente nuestro composeEnhancer pasa a ser una variable let, que va ha cambiar de vacía a contener el reduxDevtools mediante una validación de producción
+
+```js
+if (typeof window !== 'undefined') {
+  let composeEnhacers;
+  if (config.dev === 'production') composeEnhacers = compose;
+  else composeEnhacers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+  const preloadedState = window.__PRELOADED_STATE__;
+  const store = createStore(reducer, preloadedState, composeEnhacers());
+  const history = createBrowserHistory();
+```
+
+Si estamos en producción no vamos a llamar a redux_dev_tools por ende no va ha llamar está extensión.
+
+Ahora debemos configurar webpack para que esté este preparado para entornos de producción, esto lo vamos a configurar sencillamente, llendo a nuestro archivo webpack donde vamos a ocupar la variable de entorno para saber si estamos en producción y mediante esta variable crear una validación.
+
