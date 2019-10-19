@@ -1,3 +1,9 @@
+<div align="center">
+  <h1>Server Side Rendering</h1>
+</div>
+
+## Tabla de Contenido
+
 ## Client Side Rendering (CSR)
 
 Normalmente cuando hacemos una petición al servidor, tenemos que esperar a que el servidor responda nuestro html, cargue nuestro código Javascript, lo ejecute y en ese momento nuestro sitio llega a ser interactivo.
@@ -9,6 +15,10 @@ En el caso de React, tenemos que espera a que pase todo el html, despues llegá 
 </div>
 
 Lo malo de esto es que al momento de tener un sitio, si ven que se mira blanco en la primera carga es porque no tenemos el SSR(server side rendering), normalmente hay varias razones por las que usamos el client side rendering, cuando son vistas privadas no hay necesidad de esforzarnos mucho porque algó se indexe y simplemente no habilitamos el SSR, en esté caso la forma más rápida de revizarlo es desabilitando Javascript de nuestro navegador, pues no estamos recibiendo ese código, es decir no estamos ejecutandolo y simplemente nuestro sitio no se renderiza.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Server Side Rendering
 
@@ -22,6 +32,10 @@ Otro ejemplo muy fácil es buscar un sitio o una vista que carga con SSR como la
 
 Hay una pequeña carga blanca pero es minima comparada con un código que no tiene SSR. Normalmente el Client Side Renderig se usa para rutas privadas, y el Server Side Rendering se usa cuando necesitamos un feedback mucho más rápido para que nuestro sitio sea indexado, o simplemente para garantizar la experiencia del usuario en cualquier lado.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ### ¿Por qué renderizar desde el Servidor?
 
 Son 3 puntos muy importantes los cuales los hemos tocado en la sección anterior.
@@ -30,10 +44,13 @@ Son 3 puntos muy importantes los cuales los hemos tocado en la sección anterior
 2. **Mejora el SEO**, no solo estamos cargando un SPA por ejemplo que tiene CSR, solo estamos tomando en cuenta los metaTags del tope de la página pero ya ahora estamos tomando la indexación del todo el cóntenido de React que se esta precargando.
 3. **Look and Feel** dependiendo de la zona o de la url en la que estemos o en la sección del sitio, es muy importante mantener una **percepción del usuario** que se sienta comodo con el sitio, por ejemplo en el landing es muy importante tener Server Side Rendering, porque nos ayuda a indexar todo el contenido html porque el final todo estó va ha mejorar nuestro CEO. Con esto el navegador puede desacargar por atras pero mientras el usuario ya tiene un feedback inmediato.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Herramientas
 
 Babel, Express y React
-
 
 Para el desarrollo de este curso vamos a utilizar 3 herramientas esenciales:
 
@@ -46,6 +63,10 @@ Renderizar del lado del servidor nos va a traer beneficios en:
 1. Velocidad de primera carga.
 2. Mejora el SEO.
 3. Look & Feel más limpio.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Creación del proyecto base
 
@@ -65,6 +86,10 @@ nodemon
 
 Babel register es un paquete que mediante un hook de require nos permite hacer un bind en tiempo real de cualquier paquete que necesitemos, en esté caso vamos a estar haciendo un bind de babel-preset-env y babel-preset-react.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Configuración de ESLint con Webpack
 
 ESLint es una herramienta que nos señala el código que no cumpla con los estándares que le indiquemos. Se configura desde un ``.eslintrc``. Debemos instalar las siguientes dependencias:
@@ -78,6 +103,10 @@ Dentro del archivo ``.eslintrc`` podemos indicarle a ESLint el nivel de alerta s
 - 2: error
 - 1: warning
 - 0: omite la regla
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Preparación de Webpack, Babel, PostCSS y Assets
 
@@ -140,6 +169,11 @@ module.exports = {
   },
 };
 ```
+<br>
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Usando Plugins y vendor file en Webpack
 
@@ -193,6 +227,10 @@ Ahora procedemos a configurar el ``hotModeReplacement`` que simplemene es instan
   ];
 }
 ```
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Integración de Webpack con Express
 
@@ -280,6 +318,10 @@ app.listen(config.port, (err) => {
 });
 ```
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Servir React con Express
 
 Hasta ahora hemos configurado webpack y le hemos añadido ciertas funcionalidades para que se integre con nuestro servidor de express, pero no hemos configurado tadavía que nuestra aplicación se sirva desde un html que sirvamos de nuestro servidor.
@@ -313,6 +355,10 @@ Lo que debemos hacer en esté caso es crear nuestro html dentro de un template S
 
 Con estó ya estaríamos sirviendo nuestra aplicación desde el servidor.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Agregando las variables de sass desde webpack
 
 Ya que tenemos nuestra apliación de React servida desde express podemos empezar a hacer ciertas mejoras a la configuración de sass, para poder servir archivo de variables, base o cualquier cosa que necesitemos desde sass que solo vamos a importar una sola vez desde ahí para no estarnos preocupando en dado caso de que falte.
@@ -344,6 +390,10 @@ Esté elemento options nos va ha permitir en esté caso cargar con data cualquie
 ```
 
 Para terminar está configuración debemos remover el import de los assets que estamos agregando acá.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Aplicando history y creando rutas para el servidor
 
@@ -420,6 +470,10 @@ const serverRoutes = [
 export default serverRoutes;
 ```
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Haciendo initialState accesible 
 
 Ya que aprendiste a configurar el history en el navegador y también a configurar las rutas para que sean servidas del lado del servidor, ahora vamos a hacer un poco más reusable el _initialState_.
@@ -435,6 +489,10 @@ module.exports = {
 ```
 
 Ahora lo que vamos a hacer es importarlo al lugar donde lo vamos a ocupar y de esté modo ya tenmos un código más reuzable.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Configurando Redux dev Tools
 
@@ -470,6 +528,10 @@ ReactDOM.render(
 ```
 
 Gracias a esto podemos ver todo el flujo de nuestra aplicación con esta extensión.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Definiendo la función main para renderizado desde el servidor
 
@@ -556,6 +618,10 @@ const main = (req, res, next) => {
 
 export default main;
 ```
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Aplicando la función main para renderizado desde el servidor y creación del string de HTML
 
@@ -667,6 +733,10 @@ Ahora si recargamos nuestro servidor y desabilitamos JS podemos podemos ver que 
 
 Por ahora no tenemos imagenes, el cual resolveremos más adelante con un hook, pero tenemos nuestra aplicación indexable para que cualquier motor de búsquedad pueda ayudarnos a resolverla, otra cosa importante es que la apariencia del sitio se siente mucho más rápida al momento de la carga.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Assets require hook
 
 Como pudimos ver nuestra aplicación ya se está renderizando desde el servidor pero seguimos teniendo ciertpos problemas como por ejemplo las imagenes, cuando hacemos JS con el JS desabilitado podemos ver que no tenemos imagenes en las rutas que necesitamos, vamos a solucionarlo acá.
@@ -684,6 +754,9 @@ require('asset-require-hook')({
 
 Ya con está configuración podemos ver que ya estamos cargando nuestros assets desde el servidor.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Hydrate
 
@@ -709,6 +782,10 @@ import { hydrate } from 'react-dom';
 ```
 
 Esté simple cambio va ha mejorar un montón el performace de la aplicación y va ha hacerla ejecutable mucho más rápido.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Estado de Redux desde Express
 
@@ -804,6 +881,10 @@ Hasta esté punto nuestra aplicación ya tiene server side rendering, ya es inde
 
 Los siguientes pasos van ha ser aplicar ciertas medidas para que cuando pasemos de un entorno a otro sea desarrollo o producción podamos hacer el cambio sin nigún tipo de problema.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Configurando nuestro servidor para producción
 
 El siguiente paso es agregarle ciertas configuraciones a nuestro servidor de express para que cuando integremos con producción no tengamos ningún tipo de problema al momento de ejecutar nuestra aplicación.
@@ -850,6 +931,10 @@ De esté modo nuestra aplicación va ha poder encontrar los assets necesarios pa
 
 Ya que hicimos las mejores necesarias para que nuestra aplicación funcione de manera adecuada del lado del servidor, ahora debemos hacerle configuraciones para que funcione webpack también con diferentes entornos de desarrollo.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Configurando el frontend y webpack para producción
 
 Ya que tenemos nuestro servidor preparado para producción también tenemos que hacer ciertas configuraciones tanto en webpack como en el cliente para que todo funcione de manera adecuada.
@@ -871,6 +956,10 @@ if (typeof window !== 'undefined') {
 Si estamos en producción no vamos a llamar a redux_dev_tools por ende no va ha llamar está extensión.
 
 Ahora debemos configurar webpack para que esté este preparado para entornos de producción, esto lo vamos a configurar sencillamente, llendo a nuestro archivo webpack donde vamos a ocupar la variable de entorno para saber si estamos en producción y mediante esta variable crear una validación.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Compresión de Assets
 
@@ -895,7 +984,7 @@ Para añadirle ciertas mejores podemos pasarle un objeto y podemos decirle exact
 isProd ? new CompressionPlugin({
       test: /\.(js|jsx|css)$/,
       filename: '[path].gz',
-    }) : false,
+    }) : () => {},
   ],
 ```
 
@@ -929,6 +1018,10 @@ De esté modo al realizar el bundle webpack puede cargar correctamente y nos cre
 Por motivos prácticos vamos a dejar estó así nuestros archivos gz, esto porque al momento de hacer deploy a producción es cuando vamos a usar realmente estos archivos, no necesitamos ahorita cargarlos. En el curso de backend for frontend vamos a estar implementando una estrategia de ngnx para poder cargar nuestros archivos estáticos.
 
 Como pudiste ver usamos expresiones regulares para configurar nuestros archivos y seleccionarlos para hacerles una configuración gz para producción, si quieres profundizar esté tema te invito a tomar el curso de expresiones regulares en platzi.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Hashes
 
@@ -996,6 +1089,9 @@ Una vez hecho estó tenemos que llamar a nuestro archivo , nuestra función que 
 
 ```js
 import getManifest from '../getManifest';
+import { config } from '../../config/index';
+
+const isProd = config.dev === 'production';
 
 const files = getManifest();
 
@@ -1007,7 +1103,7 @@ const render = (html, preloadedState) => {
   <html>
     <head>
       <title>Platzi Video</title>
-      <link rel="stylesheet" href="${files['main.css']}" type="text/css">
+      <link rel="stylesheet" href="${isProd ? files['main.css'] : 'assets/app.css'}" type="text/css">
     </head>
     <body>
       <div id="app">${html}</div>
@@ -1016,8 +1112,8 @@ const render = (html, preloadedState) => {
           // http://redux.js.org/recipes/ServerRendering.html#security-considerations
           window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(/</g, '\\u003c')}
         </script>
-      <script src="${files['main.js']}" type="text/javascript"></script>
-      <script src="${files['vendors.js']}" type="text/javascript"></script>
+      <script src="${isProd ? files['main.js'] : 'assets/app.js'}" type="text/javascript"></script>
+      <script src="${isProd ? files['vendors.js'] : 'assets/vendor.js'}" type="text/javascript"></script>
     </body>
   </html>
   `);
@@ -1026,3 +1122,13 @@ const render = (html, preloadedState) => {
 module.exports = render;
 ```
 
+Para levantar nuestra aplicación en producción solo basta con cambiar la variable de entorno a 'development' o a 'production' para saber en que modo debería correr nuestra aplicación.
+
+Ya que aprendiste a configurar tanto entornos de desarrollo como production y también aprendiste a configurar los hashes.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
+<br>
+<br>
