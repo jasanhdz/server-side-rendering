@@ -902,5 +902,127 @@ isProd ? new CompressionPlugin({
 Ya que agregamos nuestro plugin debemos hacer una parte muy importante y es configurar nuestro webpack para que pueda servir a producción, para esto vamos a crear un nuevo script para producción:
 
 ```json
-
+{
+  "scripts": {
+    "build": "webpack-cli --config webpack.config.js --colors",
+    "start:prod": "node src/server/index.js",
+    "start:dev": "nodemon src/server/index.js --exact babel-node"
+  }
+}
 ```
+
+Al correr nuestro script de build lo más seguro es que nos salten errores o warnings creados por las reglas de eslint, para solucionar estos conflictos basta con revizar cada archivo donde no se cumplan estas reglas, un atajo muy bueno es el flag ``--fix`` de eslint que nos ayuda a solucionar las reglas de eslint en un archivo en especial, la sintaxis es así.
+
+``eslint /rutadelarchivo/ejemplo --fix``
+
+Despues de solucionar los errores de nuestros archivos aparecera un error muy común en el modulo de fileSystem y es que nosotros tenemos un modulo para extraer nuestras variables de entorno y al momento que webpack hace el bundle no encuentra el fileSystem dentro de el, para ello hay que ir a la configuración de webpack y decirle que el filesystem puede ir vacío.
+
+Dentro de webpack:
+```js
+ node: {
+    fs: 'empty',
+  },
+```
+
+De esté modo al realizar el bundle webpack puede cargar correctamente y nos creara nuestros archivos minificados en la carpeta public que definimos dentro de nuestro servidor, como podemos ver acá tenemos una serie de archivos, los archivos gz son los archivos minificados de los originales, la diferencia de estos archivos es el tamaño, esto obviamente reduce el tiempo de respuesta o el tiempo que tarda el navegador en desacargar el archivo y a velocidades más lentas va ha garantizar que el usuario pueda tener una mejor experienza.
+
+Por motivos prácticos vamos a dejar estó así nuestros archivos gz, esto porque al momento de hacer deploy a producción es cuando vamos a usar realmente estos archivos, no necesitamos ahorita cargarlos. En el curso de backend for frontend vamos a estar implementando una estrategia de ngnx para poder cargar nuestros archivos estáticos.
+
+Como pudiste ver usamos expresiones regulares para configurar nuestros archivos y seleccionarlos para hacerles una configuración gz para producción, si quieres profundizar esté tema te invito a tomar el curso de expresiones regulares en platzi.
+
+## Hashes
+
+Ya estamosa punto de terminar, ahora por último vamos a agregar una estrategia de hashes y como implementarlos en nuestros archivos, para que nuestro navegador no cache esta información y nuestro usuario siempre tenga la última versión de nuestra aplicación. 
+
+Lo primero que tenemos que hacer ir a nuestra configuración de webpack y aquí vamos a agregar una configuración extra, esta configuración extra va ha ser en el nombre de nuestros archivos.
+
+```js
+{
+  output: {
+    filename: isProd ? 'assets/[hash]-app.js' : 'assets/app.js',
+  },
+  optimization: {
+    cacheGroup: {
+      filename: isProd ? 'assets/vendor-[hash].js' : 'assets/vendor.js',
+    }
+  }
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: isProd ? 'assets/app-[hash].css' : 'assets/app.css',
+    }),
+  ]
+}
+```
+
+Con estas configuraciones aseguramos que nuestros archivos tendran hashes cuando estén en producción, luego de esto al momento de hacer build, si venimos a la consola y probamos podremos ver los hashes adecuados. Recuerden que debemos ignorar nuestros archivos minificados para no subirlos a nuestro repositorio del proyecto.
+
+¿Como vamos a leer nuestros archivos? 
+
+
+En nuestro archivo render estamos llamando a los archivos estáticos, estamos llamando a los archivos sin el hash preparado, para configurar esto vamos a crear un nuevo helper y esté helper nos va ha ayudar, para ello crearemos un archivo ``src/server/utils/getManifest.js`` También vamos a tener que instalar un plugin que se llama ``webpack-manifest-plugin``.
+
+Esté plugin lo que hace es crear un archivo de manifiesto donde va ha indicar exactamente donde estan nuestros assets en un JSON.
+
+Una vez instalado el plugin vamos a leer la documentación y vamos a implementar esté plugin de la siguiente manera:
+
+```js
+const ManifestPlugin = require('webpack-manifest-plugin');
+isProd ? new ManifestPlugin() : false,
+```
+
+Ya con estó al momento de hacer el build debemos ver un pequeño cambió de los archivos que estamos recibiendo al momento de hacer el hash donde se van a úbicar los archivos que tenemos preparados para producción, porque no sabemos cuál es el hash que estamos recibiendo de webpack, usualmente en plugins como ``html-plugin``, cuando se sirve el archivo html desde webpack ya se incerta todo por defecto, pero como estamos haciendo un labor un poco más artesanal, necesitamos primero leer el archivo getManifest y luego vamos a extraer el hash que vamos a estar leyendo.
+
+Para poder hacer estó vamos a definir nuestro archivo getManifest y dentro del archivo vamos a importar el fileSystem porque vamos a leer un archivo que ya está definido en nuestra aplicación 
+
+server/Manifest.js
+```js
+const fs = require('fs');
+
+const getManifest = () => {
+  try {
+    const manifest = JSON.parse(
+      fs.readFileSync(`${__dirname}/public/manifest.json`, 'utf8')
+    );
+    return manifest;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+module.exports = getManifest;
+```
+
+Una vez hecho estó tenemos que llamar a nuestro archivo , nuestra función que es la que nos va ha ayudar a leer precismente esté archivo manifest.js. Esto lo hacemos desde nuestro archivo ``render/index.js``
+
+```js
+import getManifest from '../getManifest';
+
+const files = getManifest();
+
+console.log(files);
+
+const render = (html, preloadedState) => {
+  return (`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Platzi Video</title>
+      <link rel="stylesheet" href="${files['main.css']}" type="text/css">
+    </head>
+    <body>
+      <div id="app">${html}</div>
+      <script>
+          // WARNING: See the following for security issues around embedding JSON in HTML:
+          // http://redux.js.org/recipes/ServerRendering.html#security-considerations
+          window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(/</g, '\\u003c')}
+        </script>
+      <script src="${files['main.js']}" type="text/javascript"></script>
+      <script src="${files['vendors.js']}" type="text/javascript"></script>
+    </body>
+  </html>
+  `);
+};
+
+module.exports = render;
+```
+

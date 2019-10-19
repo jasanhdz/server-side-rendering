@@ -1,13 +1,13 @@
 const express = require('express');
 const webpack = require('webpack');
-const { config } = require('../config');
-const main = require('./routes/main');
 const helmet = require('helmet');
+const main = require('./routes/main');
+const { config } = require('../config');
 
 const app = express();
-app.use(express.static(`${__dirname}../public`));
+app.use(express.static(`${__dirname}/public`));
 
-if (config.dev) {
+if (config.dev === 'development') {
   console.log('Cargando la configuración de desarrollo');
   const webpackConfig = require('../../webpack.config');
   const webpackDevMiddleware = require('webpack-dev-middleware');
@@ -35,5 +35,6 @@ app.get('*', main);
 
 app.listen(config.port, (err) => {
   if (err) console.log(err);
+  console.log(`Loading ${config.dev} config`);
   console.log(`El servidor está corriendo en htpp://localhost:${config.port}`);
 });
